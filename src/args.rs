@@ -6,11 +6,11 @@ use clap::{Args, Parser, Subcommand};
 #[command(author, version, about, long_about = None)]
 pub struct Cli {
   #[command(subcommand)]
-  command: Commands,
+  pub command: Commands,
 }
 
 #[derive(Subcommand, Debug)]
-enum Commands {
+pub enum Commands {
   Encode(EncodeArgs),
   Decode(DecodeArgs),
   Remove(RemoveArgs),
@@ -21,30 +21,30 @@ enum Commands {
 #[command(author, version, about, long_about = None)]
 pub struct EncodeArgs {
   #[clap(value_parser)]
-  file_path: PathBuf,
+  pub file_path: PathBuf,
   #[clap(value_parser)]
-  chunk_type: String,
+  pub chunk_type: String,
   #[clap(value_parser)]
-  message: String,
+  pub message: String,
   #[clap(value_parser)]
-  output: Option<PathBuf>,
+  pub output: Option<PathBuf>,
 }
 #[derive(Args, Debug)]
 pub struct DecodeArgs {
   #[clap(value_parser)]
-  file_path: PathBuf,
+  pub file_path: PathBuf,
   #[clap(value_parser)]
-  chunk_type: String,
+  pub chunk_type: String,
 }
 #[derive(Args, Debug)]
 pub struct RemoveArgs {
   #[clap(value_parser)]
-  file_path: PathBuf,
+  pub file_path: PathBuf,
   #[clap(value_parser)]
-  chunk_type: String,
+  pub chunk_type: String,
 }
 #[derive(Args, Debug)]
 pub struct PrintArgs {
   #[clap(value_parser)]
-  file_path: PathBuf,
+  pub file_path: PathBuf,
 }

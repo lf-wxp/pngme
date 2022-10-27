@@ -1,6 +1,5 @@
-use crate::Result;
-use crate::{chunk::Chunk, chunk_type};
-use std::{convert::TryFrom, error, fmt, str::FromStr};
+use crate::{chunk::Chunk, Result};
+use std::{convert::TryFrom, error, fmt};
 
 #[derive(Debug)]
 pub struct Png {
@@ -91,7 +90,6 @@ impl TryFrom<&[u8]> for Png {
     match Chunk::try_from_sequence(chunks_bytes) {
       Ok(chunks) => Ok(Png { header, chunks }),
       Err(x) => {
-        println!("the error is {:?}", x);
         Err(PngError::ChunksInvalid)
       }
     }
@@ -104,7 +102,6 @@ mod tests {
   use crate::chunk::Chunk;
   use crate::chunk_type::ChunkType;
   use std::convert::TryFrom;
-  use std::str::FromStr;
 
   fn testing_chunks() -> Vec<Chunk> {
     let mut chunks = Vec::new();

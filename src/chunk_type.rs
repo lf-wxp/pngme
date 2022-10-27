@@ -34,7 +34,7 @@ pub struct ChunkType {
 }
 
 impl ChunkType {
-  fn is_valid_source(bytes: &[u8; 4]) -> bool {
+  pub fn is_valid_source(bytes: &[u8; 4]) -> bool {
     bytes
       .iter()
       .all(|&item| (65..=90).contains(&item) || (97..=122).contains(&item))
@@ -43,20 +43,20 @@ impl ChunkType {
   pub fn bytes(&self) -> [u8; 4] {
     self.bytes
   }
-  fn is_critical(&self) -> bool {
+  pub fn is_critical(&self) -> bool {
     self.bytes[0] & CONDITION == 0
   }
-  fn is_public(&self) -> bool {
+  pub fn is_public(&self) -> bool {
     self.bytes[1] & CONDITION == 0
   }
-  fn is_reserved_bit_valid(&self) -> bool {
+  pub fn is_reserved_bit_valid(&self) -> bool {
     self.bytes[2] & CONDITION == 0
   }
-  fn is_safe_to_copy(&self) -> bool {
+  pub fn is_safe_to_copy(&self) -> bool {
     self.bytes[3] & CONDITION != 0
   }
 
-  fn is_valid(&self) -> bool {
+  pub fn is_valid(&self) -> bool {
     return self.is_reserved_bit_valid();
   }
 }

@@ -1,6 +1,5 @@
 use crate::{
-  chunk_type::{self, ChunkType},
-  Error, Result,
+  chunk_type::{ChunkType}, Result,
 };
 use crc::{Crc, CRC_32_ISO_HDLC};
 use std::fmt;
@@ -20,18 +19,15 @@ impl Chunk {
     let chunk_type_len = 4usize;
     let mut chunks: Vec<Chunk> = Vec::new();
     let mut chunk_data = bytes;
-    println!("the total bytes length is {:?}", bytes.len());
     loop {
       if chunk_data.len() <= 0 {
         break;
       }
-      println!("the split before, origin data length is {:}, step len is {:} ", chunk_data.len(), length_len);
       let (length, _chunk_string) = chunk_data.split_at(length_len);
       let length: [u8; 4] = length.try_into().unwrap();
       let chunk_data_len: usize = u32::from_be_bytes(length).try_into().unwrap();
       let (chunk_bytes, chunk_left) =
         chunk_data.split_at(length_len + chunk_data_len + chunk_type_len + crc_len);
-      println!("the split after, total length is {:?}, data length is {:}", length_len + chunk_data_len + chunk_type_len + crc_len, chunk_data_len);
       chunk_data = chunk_left;
       match Chunk::try_from(&chunk_bytes.to_vec()) {
         Ok(chunk) => {
