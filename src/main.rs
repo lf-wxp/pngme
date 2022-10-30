@@ -11,7 +11,6 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 fn main() -> Result<()> {
   let cli = args::Cli::parse();
-  println!("the cli params is {:?}", cli);
   match cli.command {
     args::Commands::Encode(args) => {
       commands::encode(&args)?;
@@ -25,7 +24,12 @@ fn main() -> Result<()> {
       }
        
     },
-    _ => {}
+    args::Commands::Remove(args) => {
+      commands::remove(&args)?;
+    },
+    args::Commands::Print(args) => {
+      commands::print_chunks(&args)?;
+    },
   };
   Ok(())
 }

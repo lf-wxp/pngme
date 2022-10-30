@@ -1,5 +1,5 @@
 use crate::{chunk::Chunk, Result};
-use std::{convert::TryFrom, error, fmt};
+use std::{convert::TryFrom, error, fmt, result};
 
 #[derive(Debug)]
 pub struct Png {
@@ -30,13 +30,12 @@ impl Png {
     self.chunks.push(chunk);
   }
 
-  pub fn remove_chunk(&mut self, chunk_type: &str) -> Option<()> {
+  pub fn remove_chunk(&mut self, chunk_type: &str) -> result::Result<Chunk, PngError> {
     let idx = self
       .chunks
       .iter()
-      .position(|x| x.chunk_type().to_string() == chunk_type)?;
-    self.chunks.remove(idx);
-    Some(())
+      .position(|x| x.chunk_type().to_string() == chunk_type).ok_or(PngError::ChunkNotFound(chunk_type.to_owned()))?;
+    Ok(self.chunks.remove(idx))
   }
 
   pub fn as_bytes(&self) -> Vec<u8> {
@@ -66,6 +65,7 @@ impl fmt::Display for Png {
 pub enum PngError {
   ChunksInvalid,
   HeaderInValid,
+  ChunkNotFound(String),
 }
 
 impl error::Error for PngError {}
@@ -75,13 +75,14 @@ impl fmt::Display for PngError {
     match self {
       PngError::ChunksInvalid => write!(f, "Invalid ChunksBytes",),
       PngError::HeaderInValid => write!(f, "Invalid header bytes",),
+      PngError::ChunkNotFound(chunk_type) => write!(f, "The chunk {} is not found", chunk_type),
     }
   }
 }
 
 impl TryFrom<&[u8]> for Png {
   type Error = PngError;
-  fn try_from(bytes: &[u8]) -> std::result::Result<Png, PngError> {
+  fn try_from(bytes: &[u8]) -> result::Result<Png, PngError> {
     let (header, chunks_bytes) = bytes.split_at(8);
     let header = header.try_into().unwrap();
     if header != Png::STANDARD_HEADER {
