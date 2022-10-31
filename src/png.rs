@@ -1,5 +1,5 @@
-use crate::{chunk::Chunk, Result};
-use std::{convert::TryFrom, error, fmt, result};
+use crate::{chunk::Chunk};
+use std::{convert::TryFrom, error, fmt, result, path::PathBuf, fs};
 
 #[derive(Debug)]
 pub struct Png {
@@ -15,6 +15,12 @@ impl Png {
       chunks,
     }
   }
+
+  pub fn from_file(file_path: PathBuf) -> result::Result<Png, PngError> {
+    let bytes = fs::read(&file_path).map_err(|_| PngError::PngFileOpenFail(file_path))?;
+    Png::try_from(bytes.as_slice())
+  }
+
   pub fn chunks(&self) -> &Vec<Chunk> {
     &self.chunks
   }
@@ -66,6 +72,7 @@ pub enum PngError {
   ChunksInvalid,
   HeaderInValid,
   ChunkNotFound(String),
+  PngFileOpenFail(PathBuf),
 }
 
 impl error::Error for PngError {}
@@ -76,6 +83,7 @@ impl fmt::Display for PngError {
       PngError::ChunksInvalid => write!(f, "Invalid ChunksBytes",),
       PngError::HeaderInValid => write!(f, "Invalid header bytes",),
       PngError::ChunkNotFound(chunk_type) => write!(f, "The chunk {} is not found", chunk_type),
+      PngError::PngFileOpenFail(file_path) => write!(f, "It's fail to open {:?}", file_path.to_str()),
     }
   }
 }
@@ -101,6 +109,7 @@ impl TryFrom<&[u8]> for Png {
 mod tests {
   use super::*;
   use crate::chunk::Chunk;
+  use crate::Result;
   use crate::chunk_type::ChunkType;
   use std::convert::TryFrom;
 

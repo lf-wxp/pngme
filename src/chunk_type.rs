@@ -1,7 +1,7 @@
-use crate::{Error, Result};
-use std::{convert::TryFrom, error, fmt, str::FromStr};
+use std::{convert::TryFrom, error, fmt, str::FromStr, result};
 
 const CONDITION: u8 = 1 << 5;
+
 /// Chunk type errors
 #[derive(Debug)]
 pub enum ChunkTypeError {
@@ -10,6 +10,9 @@ pub enum ChunkTypeError {
 
   /// The input string contains an invalid character at the given index
   InvalidCharacter,
+
+  /// Try transform &[u8] to &[u8: 4]
+  ByteConvertError,
 }
 
 impl error::Error for ChunkTypeError {}
@@ -23,6 +26,9 @@ impl fmt::Display for ChunkTypeError {
       ),
       ChunkTypeError::InvalidCharacter => {
         write!(f, "Input contains one or more invalid characters")
+      }
+      ChunkTypeError::ByteConvertError => {
+        write!(f, "Try covert &[u8] to &[u8;4] fail")
       }
     }
   }
@@ -55,7 +61,6 @@ impl ChunkType {
   pub fn is_safe_to_copy(&self) -> bool {
     self.bytes[3] & CONDITION != 0
   }
-
   pub fn is_valid(&self) -> bool {
     return self.is_reserved_bit_valid();
   }
@@ -63,7 +68,7 @@ impl ChunkType {
 
 impl TryFrom<[u8; 4]> for ChunkType {
   type Error = ChunkTypeError;
-  fn try_from(bytes: [u8; 4]) -> std::result::Result<ChunkType, ChunkTypeError> {
+  fn try_from(bytes: [u8; 4]) -> result::Result<ChunkType, ChunkTypeError> {
     if ChunkType::is_valid_source(&bytes) {
       return Ok(ChunkType { bytes });
     }
@@ -72,21 +77,22 @@ impl TryFrom<[u8; 4]> for ChunkType {
 }
 
 impl FromStr for ChunkType {
-  type Err = Error;
-  fn from_str(str: &str) -> Result<ChunkType> {
+  type Err = ChunkTypeError;
+  fn from_str(str: &str) -> result::Result<ChunkType, ChunkTypeError> {
     let bytes: Vec<u8> = String::from(str).bytes().collect();
+    let bytes_slice: &[u8;4]= bytes.as_slice().try_into().map_err(|_| ChunkTypeError::ByteConvertError)?;
 
     if bytes.len() != 4 {
-      return Err(Box::new(ChunkTypeError::ByteLengthError(bytes.len())));
+      return Err(ChunkTypeError::ByteLengthError(bytes.len()));
     }
 
-    let is_invalid_char = !ChunkType::is_valid_source(bytes[..].try_into().unwrap());
+    let is_invalid_char = !ChunkType::is_valid_source(bytes_slice);
 
     if is_invalid_char {
-      return Err(Box::new(ChunkTypeError::InvalidCharacter));
+      return Err(ChunkTypeError::InvalidCharacter);
     }
     Ok(ChunkType {
-      bytes: bytes[..].try_into().unwrap(),
+      bytes: bytes_slice.to_owned()
     })
   }
 }
